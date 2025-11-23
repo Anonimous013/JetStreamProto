@@ -1,0 +1,12 @@
+[workspace]
+members = [
+    "jsp_core",
+    "jsp_transport",
+    "jetstream_examples",
+    "jsp_integration_tests", "jsp_benchmarks", "jsp_gateway", "jsp_python", "jsp_wasm",
+]
+resolver = "2"
+
+[workspace.dependencies]
+tokio = { version = "1.0", features = ["full"] }
+anyhow = "1.0"

@@ -1,0 +1,21 @@
+[package]
+name = "jetstream_examples"
+version = "0.1.0"
+edition = "2021"
+autoexamples = false
+
+# Bins are in src/bin/ directory and auto-discovered
+
+[dependencies]
+jsp_core = { path = "../jsp_core" }
+jsp_transport = { path = "../jsp_transport" }
+tokio = { workspace = true }
+anyhow = { workspace = true }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+serde_cbor = "0.11"
+tempfile = "3.8"
+
+[[example]]
+name = "file_transfer_example"
+path = "examples/file_transfer_example.rs"

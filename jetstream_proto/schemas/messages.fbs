@@ -1,0 +1,108 @@
+namespace JetStream;
+
+// Fixed-size byte arrays wrapped in structs (required by FlatBuffers)
+struct Bytes32 {
+  data: [ubyte:32];
+}
+
+struct Bytes12 {
+  data: [ubyte:12];
+}
+
+struct Bytes8 {
+  data: [ubyte:8];
+}
+
+// Delivery mode for messages
+enum DeliveryMode: ubyte {
+  Reliable = 0,
+  PartiallyReliable = 1,
+  BestEffort = 2
+}
+
+// Header for all packets
+table Header {
+  stream_id: uint32;
+  msg_type: ubyte;
+  flags: ubyte;
+  sequence: uint64;
+  timestamp: uint64;
+  nonce: uint64;
+  delivery_mode: DeliveryMode;
+  ttl_ms: uint32 = 0;  // For PartiallyReliable mode
+  piggybacked_ack: uint64 = null;
+  payload_len: uint32 = null;
+  connection_id: uint64 = null;
+}
+
+// Handshake messages
+table ClientHello {
+  version: uint8;
+  client_random: Bytes32;
+  supported_ciphers: [uint16];
+  kyber_public_key: [ubyte];
+  x25519_public_key: Bytes32;
+  supported_formats: [ubyte];  // Serialization formats: 0=CBOR, 1=FlatBuffers
+}
+
+table ServerHello {
+  version: uint8;
+  server_random: Bytes32;
+  selected_cipher: uint16;
+  kyber_ciphertext: [ubyte];
+  x25519_public_key: Bytes32;
+  selected_format: ubyte;  // Chosen serialization format
+}
+
+// Control messages
+table SessionConfig {
+  timeout_secs: uint32;
+  max_streams: uint32;
+  rate_limit_messages: uint32;
+  rate_limit_bytes: uint64;
+}
+
+table SessionTicket {
+  ticket_id: uint64;
+  created_at: uint64;
+  expires_at: uint64;
+  session_key: Bytes32;
+}
+
+// Path validation
+table PathChallenge {
+  challenge_data: Bytes8;
+}
+
+table PathResponse {
+  challenge_data: Bytes8;
+}
+
+// STUN messages
+table StunBindingRequest {
+  transaction_id: Bytes12;
+}
+
+table StunBindingResponse {
+  transaction_id: Bytes12;
+  mapped_address: string;
+}
+
+// Message wrapper
+union MessageType {
+  Header,
+  ClientHello,
+  ServerHello,
+  SessionConfig,
+  SessionTicket,
+  PathChallenge,
+  PathResponse,
+  StunBindingRequest,
+  StunBindingResponse
+}
+
+table Message {
+  message: MessageType;
+}
+
+root_type Message;

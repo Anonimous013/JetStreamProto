@@ -1,0 +1,32 @@
+{
+  "name": "jetstream-proto-wasm",
+  "version": "0.1.0",
+  "description": "WebAssembly bindings for JetStreamProto",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "jetstream_proto_wasm_bg.wasm"
+  ],
+  "scripts": {
+    "build": "wasm-pack build --target web --out-dir pkg",
+    "build:nodejs": "wasm-pack build --target nodejs --out-dir pkg-node",
+    "build:bundler": "wasm-pack build --target bundler --out-dir pkg-bundler",
+    "test": "wasm-pack test --headless --firefox"
+  },
+  "keywords": [
+    "wasm",
+    "webassembly",
+    "networking",
+    "udp",
+    "protocol",
+    "jetstream"
+  ],
+  "author": "JetStreamProto Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/jetstream-proto"
+  }
+}

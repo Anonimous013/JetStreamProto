@@ -2137,7 +2137,7 @@ impl core::fmt::Debug for Message<'_> {
 /// catch every error, or be maximally performant. For the
 /// previous, unchecked, behavior use
 /// `root_as_message_unchecked`.
-pub fn root_as_message(buf: &[u8]) -> Result<Message, flatbuffers::InvalidFlatbuffer> {
+pub fn root_as_message(buf: &[u8]) -> Result<Message<'_>, flatbuffers::InvalidFlatbuffer> {
   flatbuffers::root::<Message>(buf)
 }
 #[inline]
@@ -2147,7 +2147,7 @@ pub fn root_as_message(buf: &[u8]) -> Result<Message, flatbuffers::InvalidFlatbu
 /// catch every error, or be maximally performant. For the
 /// previous, unchecked, behavior use
 /// `size_prefixed_root_as_message_unchecked`.
-pub fn size_prefixed_root_as_message(buf: &[u8]) -> Result<Message, flatbuffers::InvalidFlatbuffer> {
+pub fn size_prefixed_root_as_message(buf: &[u8]) -> Result<Message<'_>, flatbuffers::InvalidFlatbuffer> {
   flatbuffers::size_prefixed_root::<Message>(buf)
 }
 #[inline]
@@ -2180,14 +2180,14 @@ pub fn size_prefixed_root_as_message_with_opts<'b, 'o>(
 /// Assumes, without verification, that a buffer of bytes contains a Message and returns it.
 /// # Safety
 /// Callers must trust the given bytes do indeed contain a valid `Message`.
-pub unsafe fn root_as_message_unchecked(buf: &[u8]) -> Message {
+pub unsafe fn root_as_message_unchecked(buf: &[u8]) -> Message<'_> {
   unsafe { flatbuffers::root_unchecked::<Message>(buf) }
 }
 #[inline]
 /// Assumes, without verification, that a buffer of bytes contains a size prefixed Message and returns it.
 /// # Safety
 /// Callers must trust the given bytes do indeed contain a valid size prefixed `Message`.
-pub unsafe fn size_prefixed_root_as_message_unchecked(buf: &[u8]) -> Message {
+pub unsafe fn size_prefixed_root_as_message_unchecked(buf: &[u8]) -> Message<'_> {
   unsafe { flatbuffers::size_prefixed_root_unchecked::<Message>(buf) }
 }
 #[inline]

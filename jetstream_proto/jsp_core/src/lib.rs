@@ -2,6 +2,8 @@ pub mod types;
 pub mod codec;
 pub mod session;
 pub mod crypto;
+pub mod signatures;
+pub mod double_ratchet;
 pub mod stream;
 pub mod transfer;
 pub mod replay_protection;
@@ -9,6 +11,8 @@ pub mod compression;
 pub mod fec;
 pub mod qos;
 pub mod serialization;
+pub mod crypto_selector;
+pub mod compression_selector;
 
 #[cfg(test)]
 mod session_test;

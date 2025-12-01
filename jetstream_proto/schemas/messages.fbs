@@ -36,21 +36,28 @@ table Header {
 }
 
 // Handshake messages
+// Handshake messages
 table ClientHello {
-  version: uint8;
+  version: uint16;
   client_random: Bytes32;
+  session_id: uint64;
   supported_ciphers: [uint16];
-  kyber_public_key: [ubyte];
   x25519_public_key: Bytes32;
+  kyber_public_key: [ubyte];
+  nonce: uint64;
+  timestamp: uint64;
+  connection_id: uint64 = null;
   supported_formats: [ubyte];  // Serialization formats: 0=CBOR, 1=FlatBuffers
 }
 
 table ServerHello {
-  version: uint8;
+  version: uint16;
   server_random: Bytes32;
+  session_id: uint64;
   selected_cipher: uint16;
-  kyber_ciphertext: [ubyte];
   x25519_public_key: Bytes32;
+  kyber_ciphertext: [ubyte];
+  connection_id: uint64 = null;
   selected_format: ubyte;  // Chosen serialization format
 }
 

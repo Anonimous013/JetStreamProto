@@ -16,7 +16,7 @@
 [![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![Version](https://img.shields.io/badge/version-0.4.0-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-0.5.0-blue.svg)]()
 
 [Features](#-features) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Performance](#-performance) • [Examples](#-examples)
 
@@ -35,7 +35,7 @@ JetStreamProto is a modern, production-ready networking protocol designed for hi
 - **🛡️ Resilient**: Forward Error Correction recovers up to 20% packet loss without retransmission
 - **📱 Mobile-Optimized**: Adaptive compression and battery-aware heartbeats
 - **🌐 Multi-Transport**: Seamless UDP/TCP/QUIC support with automatic fallback
-- **🔧 Multi-Language**: Native support for Rust, Python, and JavaScript
+- **🔧 Multi-Language**: Native SDKs for Rust, Python, TypeScript/JavaScript, C, and Go
 
 ---
 
@@ -233,11 +233,16 @@ graph TB
 
 ### Components
 
-- **jsp_core**: Protocol definitions, serialization (FlatBuffers/CBOR)
-- **jsp_transport**: Connection management, transports (UDP/TCP/QUIC)
+- **jsp_core**: Protocol definitions, serialization (FlatBuffers), crypto selectors
+- **jsp_transport**: Connection management, transports (UDP/TCP/QUIC), adaptive protocol
+- **jsp_storage**: Persistent storage with versioning and replication
+- **jsp_sync**: CRDT-based synchronization (LWW-Register, OR-Set)
 - **jsp_gateway**: Load balancer and UDP proxy
-- **jsp_python**: Python bindings (PyO3)
-- **jsp_wasm**: JavaScript/WASM bindings
+- **jsp_python**: Python bindings (PyO3) with async support
+- **jsp_wasm**: JavaScript/TypeScript WASM bindings
+- **jsp_c**: C FFI bindings with cbindgen headers
+- **jsp_go**: Go bindings via cgo
+- **jsp_cli**: Command-line tools for monitoring and profiling
 - **jsp_benchmarks**: Performance benchmarks (Criterion)
 - **jsp_integration_tests**: End-to-end tests
 
@@ -245,43 +250,278 @@ graph TB
 
 ## 🌍 Multi-Language Support
 
-### Python
+JetStreamProto provides native SDKs for multiple programming languages, making it easy to integrate into any project.
 
+### 🐍 Python SDK
+
+**Installation:**
 ```bash
-pip install jetstream_proto-0.1.0-cp311-cp311-win_amd64.whl
+pip install maturin
+cd jsp_python
+maturin build --release
+pip install target/wheels/jetstream_proto-*.whl
 ```
 
+**Usage:**
 ```python
 from jetstream_proto import Connection
 
 # Create connection
-conn = Connection.connect("127.0.0.1:8080")
+conn = Connection()
+conn.connect("127.0.0.1:8080")
+conn.handshake()
+
+# Open stream
+stream_id = conn.open_stream(1, "reliable")
 
 # Send message
-conn.send_on_stream(1, b"Hello from Python!")
+conn.send(stream_id, b"Hello from Python!")
 
-# Receive
-packets = conn.recv()
+# Receive (async)
+import asyncio
+async def receive():
+    data = await conn.receive()
+    print(f"Received: {data}")
+
+asyncio.run(receive())
+
+# Close
+conn.close()
 ```
 
-### JavaScript (WASM)
+**Features:**
+- ✅ Async/await support with asyncio
+- ✅ Full protocol feature coverage
+- ✅ Pythonic API design
+- ✅ Type hints included
+- ✅ Cross-platform (Windows, Linux, macOS)
 
+**Documentation:** [jsp_python/README.md](jetstream_proto/jsp_python/README.md)
+
+---
+
+### 📘 TypeScript/JavaScript SDK (WASM)
+
+**Installation:**
 ```bash
 npm install @jetstream/proto
+# or
+yarn add @jetstream/proto
 ```
 
-```javascript
+**Usage (Browser):**
+```typescript
 import { Connection } from '@jetstream/proto';
 
 // Create connection
-const conn = await Connection.connect('127.0.0.1:8080');
+const conn = new Connection();
+await conn.connect('ws://127.0.0.1:8080');
+await conn.handshake();
+
+// Open stream
+const streamId = await conn.open_stream(1, 'reliable');
 
 // Send message
-await conn.sendOnStream(1, new TextEncoder().encode('Hello from JS!'));
+const encoder = new TextEncoder();
+await conn.send(streamId, encoder.encode('Hello from TypeScript!'));
 
 // Receive
-const packets = await conn.recv();
+conn.on_message((streamId, data) => {
+    const decoder = new TextDecoder();
+    console.log(`Received on stream ${streamId}: ${decoder.decode(data)}`);
+});
+
+// Close
+await conn.close();
 ```
+
+**Usage (Node.js):**
+```javascript
+const { Connection } = require('@jetstream/proto');
+
+async function main() {
+    const conn = new Connection();
+    await conn.connect('127.0.0.1:8080');
+    await conn.handshake();
+    
+    const streamId = await conn.open_stream(1, 'reliable');
+    await conn.send(streamId, Buffer.from('Hello from Node.js!'));
+    
+    await conn.close();
+}
+
+main().catch(console.error);
+```
+
+**Features:**
+- ✅ WebAssembly for native performance
+- ✅ Promise-based async API
+- ✅ TypeScript definitions included
+- ✅ Browser and Node.js support
+- ✅ Zero dependencies (WASM only)
+- ✅ Tree-shakeable
+
+**Documentation:** [jsp_wasm/README_TYPESCRIPT.md](jetstream_proto/jsp_wasm/README_TYPESCRIPT.md)
+
+---
+
+### 🔧 C SDK
+
+**Installation:**
+```bash
+cd jsp_c
+cargo build --release
+# Headers: target/jetstream_proto.h
+# Library: target/release/libjsp_c.a (static) or libjsp_c.so (dynamic)
+```
+
+**Usage:**
+```c
+#include "jetstream_proto.h"
+#include <stdio.h>
+
+int main() {
+    // Create connection
+    JspConnection* conn = jsp_connection_new();
+    
+    // Connect
+    JspError err = jsp_connection_connect(conn, "127.0.0.1:8080");
+    if (err != JSP_ERROR_OK) {
+        fprintf(stderr, "Connection failed: %d\n", err);
+        return 1;
+    }
+    
+    // Handshake
+    err = jsp_connection_handshake(conn);
+    if (err != JSP_ERROR_OK) {
+        fprintf(stderr, "Handshake failed: %d\n", err);
+        return 1;
+    }
+    
+    // Open stream
+    unsigned int stream_id;
+    err = jsp_connection_open_stream(conn, 1, JSP_DELIVERY_MODE_RELIABLE, &stream_id);
+    
+    // Send message
+    const char* message = "Hello from C!";
+    err = jsp_connection_send(conn, stream_id, (const uint8_t*)message, strlen(message));
+    
+    // Close
+    jsp_connection_close(conn);
+    jsp_connection_free(conn);
+    
+    return 0;
+}
+```
+
+**Compile:**
+```bash
+gcc -o myapp myapp.c -L./target/release -ljsp_c -lpthread -ldl -lm
+```
+
+**Features:**
+- ✅ C99 compatible
+- ✅ Thread-safe opaque handles
+- ✅ Error code-based API
+- ✅ Zero-copy where possible
+- ✅ Static and dynamic linking
+- ✅ C++ compatible
+- ✅ Auto-generated headers (cbindgen)
+
+**Documentation:** [jsp_c/README.md](jetstream_proto/jsp_c/README.md)
+
+---
+
+### 🐹 Go SDK
+
+**Installation:**
+```bash
+# Ensure C library is built first
+cd jsp_c
+cargo build --release
+cd ../jsp_go
+
+# Use in your Go project
+go get github.com/yourusername/jetstream-proto/jsp_go
+```
+
+**Usage:**
+```go
+package main
+
+import (
+    "fmt"
+    "log"
+    jetstream "github.com/yourusername/jetstream-proto/jsp_go"
+)
+
+func main() {
+    // Create connection
+    conn, err := jetstream.NewConnection()
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer conn.Free()
+    
+    // Connect
+    if err := conn.Connect("127.0.0.1:8080"); err != nil {
+        log.Fatal(err)
+    }
+    
+    // Handshake
+    if err := conn.Handshake(); err != nil {
+        log.Fatal(err)
+    }
+    
+    // Open stream
+    streamID, err := conn.OpenStream(1, jetstream.Reliable)
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    // Send message
+    message := []byte("Hello from Go!")
+    if err := conn.Send(streamID, message); err != nil {
+        log.Fatal(err)
+    }
+    
+    fmt.Println("Message sent successfully!")
+    
+    // Close
+    conn.Close()
+}
+```
+
+**Features:**
+- ✅ Idiomatic Go API
+- ✅ Goroutine-safe
+- ✅ Automatic memory management
+- ✅ Error handling with Go conventions
+- ✅ Context support for cancellation
+- ✅ Full test coverage
+
+**Documentation:** [jsp_go/README.md](jetstream_proto/jsp_go/README.md)
+
+---
+
+### 📊 SDK Comparison
+
+| Feature | Python | TypeScript/JS | C | Go |
+|---------|--------|---------------|---|-----|
+| **Async Support** | ✅ asyncio | ✅ Promises | ❌ Sync only | ✅ Goroutines |
+| **Type Safety** | ✅ Type hints | ✅ TypeScript | ⚠️ Manual | ✅ Strong types |
+| **Performance** | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
+| **Memory Safety** | ✅ GC | ✅ GC | ⚠️ Manual | ✅ GC |
+| **Platform** | Cross-platform | Cross-platform | Cross-platform | Cross-platform |
+| **Package Manager** | pip | npm/yarn | Manual | go get |
+| **Build Complexity** | Medium | Low | High | Medium |
+
+### 🎯 Choosing an SDK
+
+- **Python**: Best for data science, ML, rapid prototyping
+- **TypeScript/JS**: Best for web apps, browser-based clients
+- **C**: Best for embedded systems, maximum performance
+- **Go**: Best for microservices, cloud-native apps
 
 ---
 

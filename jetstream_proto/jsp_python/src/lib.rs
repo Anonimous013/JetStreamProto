@@ -40,6 +40,60 @@ impl Connection {
         Ok(())
     }
 
+    /// Perform handshake
+    fn handshake(&self) -> PyResult<()> {
+        let inner = self.inner.as_ref()
+            .ok_or_else(|| PyRuntimeError::new_err("Not connected"))?;
+        
+        let inner_clone = inner.clone();
+        let runtime = self.runtime.clone();
+        
+        runtime.block_on(async move {
+            let mut conn = inner_clone.lock().await;
+            conn.handshake().await
+        }).map_err(|e| PyRuntimeError::new_err(format!("Handshake failed: {}", e)))?;
+        
+        Ok(())
+    }
+
+    /// Get session ID
+    fn session_id(&self) -> PyResult<u64> {
+        let inner = self.inner.as_ref()
+            .ok_or_else(|| PyRuntimeError::new_err("Not connected"))?;
+        
+        let inner_clone = inner.clone();
+        let runtime = self.runtime.clone();
+        
+        let session_id = runtime.block_on(async move {
+            let conn = inner_clone.lock().await;
+            conn.session_id()
+        });
+        
+        Ok(session_id)
+    }
+
+    /// Open a new stream
+    fn open_stream(&self, priority: u8, delivery_mode: String) -> PyResult<u32> {
+        let inner = self.inner.as_ref()
+            .ok_or_else(|| PyRuntimeError::new_err("Not connected"))?;
+        
+        let mode = match delivery_mode.as_str() {
+            "reliable" => jsp_core::types::delivery::DeliveryMode::Reliable,
+            "best_effort" => jsp_core::types::delivery::DeliveryMode::BestEffort,
+            _ => return Err(PyRuntimeError::new_err("Invalid delivery mode. Use 'reliable' or 'best_effort'")),
+        };
+        
+        let inner_clone = inner.clone();
+        let runtime = self.runtime.clone();
+        
+        let stream_id = runtime.block_on(async move {
+            let mut conn = inner_clone.lock().await;
+            conn.open_stream(priority, mode)
+        }).map_err(|e| PyRuntimeError::new_err(format!("Open stream failed: {}", e)))?;
+        
+        Ok(stream_id)
+    }
+
     /// Send data on a stream
     fn send(&self, stream_id: u32, data: Vec<u8>) -> PyResult<()> {
         let inner = self.inner.as_ref()

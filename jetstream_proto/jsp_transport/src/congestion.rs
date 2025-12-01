@@ -6,6 +6,11 @@ pub enum CongestionState {
     SlowStart,
     CongestionAvoidance,
     Recovery,
+    // BBR states
+    Startup,
+    Drain,
+    ProbeBW,
+    ProbeRTT,
 }
 
 /// Trait for congestion control algorithms
@@ -93,6 +98,8 @@ impl CongestionController for NewReno {
                 self.cwnd = self.ssthresh;
                 self.state = CongestionState::CongestionAvoidance;
             }
+            // Ignore BBR states for NewReno
+            _ => {}
         }
     }
 

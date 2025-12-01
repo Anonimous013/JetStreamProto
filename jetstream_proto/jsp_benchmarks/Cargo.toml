@@ -36,3 +36,7 @@ harness = false
 [[bench]]
 name = "concurrent_connections"
 harness = false
+
+[[bench]]
+name = "serialization_bench"
+harness = false

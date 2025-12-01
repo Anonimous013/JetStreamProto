@@ -1,6 +1,7 @@
 use jsp_transport::connection::Connection;
 use jsp_transport::config::ConnectionConfig;
 use jsp_core::types::control::CloseReason;
+use jsp_core::types::delivery::DeliveryMode;
 use std::net::SocketAddr;
 
 /// Test client helper for integration tests
@@ -63,20 +64,9 @@ impl TestClient {
     }
     
     /// Open a new stream with specified delivery mode
-    /// Note: This functionality requires public API in Connection
-    /// Commented out until API is available
-    /*
     pub fn open_stream(&mut self, priority: u8, mode: DeliveryMode) -> anyhow::Result<u32> {
-        let stream_id = match mode {
-            DeliveryMode::Reliable => self.connection.session.open_reliable_stream(priority)?,
-            DeliveryMode::PartiallyReliable { ttl_ms } => {
-                self.connection.session.open_partially_reliable_stream(priority, ttl_ms)?
-            }
-            DeliveryMode::BestEffort => self.connection.session.open_best_effort_stream(priority)?,
-        };
-        Ok(stream_id)
+        self.connection.open_stream(priority, mode)
     }
-    */
     
     /// Close a stream
     /// Note: Commented out until public API available
@@ -87,12 +77,9 @@ impl TestClient {
     */
     
     /// Get the session ID
-    /// Note: Commented out until public API available
-    /*
     pub fn session_id(&self) -> u64 {
-        self.connection.session.session_id
+        self.connection.session_id()
     }
-    */
     
     /// Get the local address
     pub fn local_addr(&self) -> anyhow::Result<SocketAddr> {

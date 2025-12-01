@@ -19,11 +19,14 @@ sha2 = "0.10"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 pqcrypto-kyber = "0.8"
+pqcrypto-dilithium = "0.5"
 pqcrypto-traits = "0.3"
 getrandom = "0.2"
 lz4_flex = "0.11"
 reed-solomon-erasure = "6.0"
 flatbuffers = "25.9"
+brotli = "7.0"
+zstd = "0.13"
 
 
 

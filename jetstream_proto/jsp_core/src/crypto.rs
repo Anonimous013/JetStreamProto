@@ -4,7 +4,7 @@ use chacha20poly1305::{
 };
 use aes_gcm::Aes256Gcm;
 use x25519_dalek::{PublicKey, StaticSecret};
-use pqcrypto_kyber::kyber512;
+use pqcrypto_kyber::kyber768;
 use pqcrypto_traits::kem::{Ciphertext, PublicKey as KyberPublicKey, SharedSecret};
 use rand_core::OsRng;
 use anyhow::Result;
@@ -18,8 +18,8 @@ pub enum CipherSuite {
 pub struct CryptoContext {
     local_secret: StaticSecret,
     local_public: PublicKey,
-    kyber_secret: kyber512::SecretKey,
-    kyber_public: kyber512::PublicKey,
+    kyber_secret: kyber768::SecretKey,
+    kyber_public: kyber768::PublicKey,
     shared_secret: Option<Key>,
     cipher_suite: CipherSuite,
 }
@@ -35,8 +35,8 @@ impl CryptoContext {
         let local_secret = StaticSecret::random_from_rng(OsRng);
         let local_public = PublicKey::from(&local_secret);
         
-        // Generate Kyber-512 keypair
-        let (kyber_public, kyber_secret) = kyber512::keypair();
+        // Generate Kyber-768 keypair (upgraded from Kyber-512)
+        let (kyber_public, kyber_secret) = kyber768::keypair();
         
         Self {
             local_secret,
@@ -61,28 +61,28 @@ impl CryptoContext {
     }
 
     pub fn encapsulate_kyber(&self, peer_kyber_pk_bytes: &[u8]) -> Result<(Vec<u8>, Vec<u8>)> {
-        // Ensure peer key is correct length for Kyber-512
-        if peer_kyber_pk_bytes.len() != kyber512::public_key_bytes() {
+        // Ensure peer key is correct length for Kyber-768
+        if peer_kyber_pk_bytes.len() != kyber768::public_key_bytes() {
              return Err(anyhow::anyhow!("Invalid Kyber public key length"));
         }
         
-        let peer_kyber_pk = kyber512::PublicKey::from_bytes(peer_kyber_pk_bytes)
+        let peer_kyber_pk = kyber768::PublicKey::from_bytes(peer_kyber_pk_bytes)
             .map_err(|_| anyhow::anyhow!("Invalid Kyber public key"))?;
             
-        let (shared_secret, ciphertext) = kyber512::encapsulate(&peer_kyber_pk);
+        let (shared_secret, ciphertext) = kyber768::encapsulate(&peer_kyber_pk);
             
         Ok((ciphertext.as_bytes().to_vec(), shared_secret.as_bytes().to_vec()))
     }
     
     pub fn decapsulate_kyber(&self, ciphertext_bytes: &[u8]) -> Result<Vec<u8>> {
-        if ciphertext_bytes.len() != kyber512::ciphertext_bytes() {
+        if ciphertext_bytes.len() != kyber768::ciphertext_bytes() {
             return Err(anyhow::anyhow!("Invalid Kyber ciphertext length"));
         }
         
-        let ciphertext = kyber512::Ciphertext::from_bytes(ciphertext_bytes)
+        let ciphertext = kyber768::Ciphertext::from_bytes(ciphertext_bytes)
             .map_err(|_| anyhow::anyhow!("Invalid Kyber ciphertext"))?;
         
-        let shared_secret = kyber512::decapsulate(&ciphertext, &self.kyber_secret);
+        let shared_secret = kyber768::decapsulate(&ciphertext, &self.kyber_secret);
              
         Ok(shared_secret.as_bytes().to_vec())
     }

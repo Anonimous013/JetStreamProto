@@ -1019,6 +1019,24 @@ impl Connection {
         Ok(())
     }
 
+    /// Get the session ID
+    pub fn session_id(&self) -> u64 {
+        self.session.session_id
+    }
+
+    /// Open a new stream with specified delivery mode
+    pub fn open_stream(&mut self, priority: u8, mode: jsp_core::types::delivery::DeliveryMode) -> Result<u32> {
+        use jsp_core::types::delivery::DeliveryMode;
+        let stream_id = match mode {
+            DeliveryMode::Reliable => self.session.open_reliable_stream(priority)?,
+            DeliveryMode::PartiallyReliable { ttl_ms } => {
+                self.session.open_partially_reliable_stream(priority, ttl_ms)?
+            }
+            DeliveryMode::BestEffort => self.session.open_best_effort_stream(priority)?,
+        };
+        Ok(stream_id)
+    }
+
     /// Gracefully close the connection
     pub async fn close(&mut self, reason: CloseReason, message: Option<String>) -> Result<()> {
         self.closing.store(true, Ordering::Relaxed);

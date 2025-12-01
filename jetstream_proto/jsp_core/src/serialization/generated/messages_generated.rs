@@ -754,10 +754,14 @@ impl<'a> flatbuffers::Follow<'a> for ClientHello<'a> {
 impl<'a> ClientHello<'a> {
   pub const VT_VERSION: flatbuffers::VOffsetT = 4;
   pub const VT_CLIENT_RANDOM: flatbuffers::VOffsetT = 6;
-  pub const VT_SUPPORTED_CIPHERS: flatbuffers::VOffsetT = 8;
-  pub const VT_KYBER_PUBLIC_KEY: flatbuffers::VOffsetT = 10;
+  pub const VT_SESSION_ID: flatbuffers::VOffsetT = 8;
+  pub const VT_SUPPORTED_CIPHERS: flatbuffers::VOffsetT = 10;
   pub const VT_X25519_PUBLIC_KEY: flatbuffers::VOffsetT = 12;
-  pub const VT_SUPPORTED_FORMATS: flatbuffers::VOffsetT = 14;
+  pub const VT_KYBER_PUBLIC_KEY: flatbuffers::VOffsetT = 14;
+  pub const VT_NONCE: flatbuffers::VOffsetT = 16;
+  pub const VT_TIMESTAMP: flatbuffers::VOffsetT = 18;
+  pub const VT_CONNECTION_ID: flatbuffers::VOffsetT = 20;
+  pub const VT_SUPPORTED_FORMATS: flatbuffers::VOffsetT = 22;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -769,9 +773,13 @@ impl<'a> ClientHello<'a> {
     args: &'args ClientHelloArgs<'args>
   ) -> flatbuffers::WIPOffset<ClientHello<'bldr>> {
     let mut builder = ClientHelloBuilder::new(_fbb);
+    if let Some(x) = args.connection_id { builder.add_connection_id(x); }
+    builder.add_timestamp(args.timestamp);
+    builder.add_nonce(args.nonce);
+    builder.add_session_id(args.session_id);
     if let Some(x) = args.supported_formats { builder.add_supported_formats(x); }
-    if let Some(x) = args.x25519_public_key { builder.add_x25519_public_key(x); }
     if let Some(x) = args.kyber_public_key { builder.add_kyber_public_key(x); }
+    if let Some(x) = args.x25519_public_key { builder.add_x25519_public_key(x); }
     if let Some(x) = args.supported_ciphers { builder.add_supported_ciphers(x); }
     if let Some(x) = args.client_random { builder.add_client_random(x); }
     builder.add_version(args.version);
@@ -780,11 +788,11 @@ impl<'a> ClientHello<'a> {
 
 
   #[inline]
-  pub fn version(&self) -> u8 {
+  pub fn version(&self) -> u16 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<u8>(ClientHello::VT_VERSION, Some(0)).unwrap()}
+    unsafe { self._tab.get::<u16>(ClientHello::VT_VERSION, Some(0)).unwrap()}
   }
   #[inline]
   pub fn client_random(&self) -> Option<&'a Bytes32> {
@@ -794,11 +802,25 @@ impl<'a> ClientHello<'a> {
     unsafe { self._tab.get::<Bytes32>(ClientHello::VT_CLIENT_RANDOM, None)}
   }
   #[inline]
+  pub fn session_id(&self) -> u64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u64>(ClientHello::VT_SESSION_ID, Some(0)).unwrap()}
+  }
+  #[inline]
   pub fn supported_ciphers(&self) -> Option<flatbuffers::Vector<'a, u16>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, u16>>>(ClientHello::VT_SUPPORTED_CIPHERS, None)}
+  }
+  #[inline]
+  pub fn x25519_public_key(&self) -> Option<&'a Bytes32> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<Bytes32>(ClientHello::VT_X25519_PUBLIC_KEY, None)}
   }
   #[inline]
   pub fn kyber_public_key(&self) -> Option<flatbuffers::Vector<'a, u8>> {
@@ -808,11 +830,25 @@ impl<'a> ClientHello<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, u8>>>(ClientHello::VT_KYBER_PUBLIC_KEY, None)}
   }
   #[inline]
-  pub fn x25519_public_key(&self) -> Option<&'a Bytes32> {
+  pub fn nonce(&self) -> u64 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<Bytes32>(ClientHello::VT_X25519_PUBLIC_KEY, None)}
+    unsafe { self._tab.get::<u64>(ClientHello::VT_NONCE, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn timestamp(&self) -> u64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u64>(ClientHello::VT_TIMESTAMP, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn connection_id(&self) -> Option<u64> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u64>(ClientHello::VT_CONNECTION_ID, None)}
   }
   #[inline]
   pub fn supported_formats(&self) -> Option<flatbuffers::Vector<'a, u8>> {
@@ -830,22 +866,30 @@ impl flatbuffers::Verifiable for ClientHello<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<u8>("version", Self::VT_VERSION, false)?
+     .visit_field::<u16>("version", Self::VT_VERSION, false)?
      .visit_field::<Bytes32>("client_random", Self::VT_CLIENT_RANDOM, false)?
+     .visit_field::<u64>("session_id", Self::VT_SESSION_ID, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, u16>>>("supported_ciphers", Self::VT_SUPPORTED_CIPHERS, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, u8>>>("kyber_public_key", Self::VT_KYBER_PUBLIC_KEY, false)?
      .visit_field::<Bytes32>("x25519_public_key", Self::VT_X25519_PUBLIC_KEY, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, u8>>>("kyber_public_key", Self::VT_KYBER_PUBLIC_KEY, false)?
+     .visit_field::<u64>("nonce", Self::VT_NONCE, false)?
+     .visit_field::<u64>("timestamp", Self::VT_TIMESTAMP, false)?
+     .visit_field::<u64>("connection_id", Self::VT_CONNECTION_ID, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, u8>>>("supported_formats", Self::VT_SUPPORTED_FORMATS, false)?
      .finish();
     Ok(())
   }
 }
 pub struct ClientHelloArgs<'a> {
-    pub version: u8,
+    pub version: u16,
     pub client_random: Option<&'a Bytes32>,
+    pub session_id: u64,
     pub supported_ciphers: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, u16>>>,
-    pub kyber_public_key: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, u8>>>,
     pub x25519_public_key: Option<&'a Bytes32>,
+    pub kyber_public_key: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, u8>>>,
+    pub nonce: u64,
+    pub timestamp: u64,
+    pub connection_id: Option<u64>,
     pub supported_formats: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, u8>>>,
 }
 impl<'a> Default for ClientHelloArgs<'a> {
@@ -854,9 +898,13 @@ impl<'a> Default for ClientHelloArgs<'a> {
     ClientHelloArgs {
       version: 0,
       client_random: None,
+      session_id: 0,
       supported_ciphers: None,
-      kyber_public_key: None,
       x25519_public_key: None,
+      kyber_public_key: None,
+      nonce: 0,
+      timestamp: 0,
+      connection_id: None,
       supported_formats: None,
     }
   }
@@ -868,24 +916,40 @@ pub struct ClientHelloBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> ClientHelloBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_version(&mut self, version: u8) {
-    self.fbb_.push_slot::<u8>(ClientHello::VT_VERSION, version, 0);
+  pub fn add_version(&mut self, version: u16) {
+    self.fbb_.push_slot::<u16>(ClientHello::VT_VERSION, version, 0);
   }
   #[inline]
   pub fn add_client_random(&mut self, client_random: &Bytes32) {
     self.fbb_.push_slot_always::<&Bytes32>(ClientHello::VT_CLIENT_RANDOM, client_random);
   }
   #[inline]
+  pub fn add_session_id(&mut self, session_id: u64) {
+    self.fbb_.push_slot::<u64>(ClientHello::VT_SESSION_ID, session_id, 0);
+  }
+  #[inline]
   pub fn add_supported_ciphers(&mut self, supported_ciphers: flatbuffers::WIPOffset<flatbuffers::Vector<'b , u16>>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ClientHello::VT_SUPPORTED_CIPHERS, supported_ciphers);
+  }
+  #[inline]
+  pub fn add_x25519_public_key(&mut self, x25519_public_key: &Bytes32) {
+    self.fbb_.push_slot_always::<&Bytes32>(ClientHello::VT_X25519_PUBLIC_KEY, x25519_public_key);
   }
   #[inline]
   pub fn add_kyber_public_key(&mut self, kyber_public_key: flatbuffers::WIPOffset<flatbuffers::Vector<'b , u8>>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ClientHello::VT_KYBER_PUBLIC_KEY, kyber_public_key);
   }
   #[inline]
-  pub fn add_x25519_public_key(&mut self, x25519_public_key: &Bytes32) {
-    self.fbb_.push_slot_always::<&Bytes32>(ClientHello::VT_X25519_PUBLIC_KEY, x25519_public_key);
+  pub fn add_nonce(&mut self, nonce: u64) {
+    self.fbb_.push_slot::<u64>(ClientHello::VT_NONCE, nonce, 0);
+  }
+  #[inline]
+  pub fn add_timestamp(&mut self, timestamp: u64) {
+    self.fbb_.push_slot::<u64>(ClientHello::VT_TIMESTAMP, timestamp, 0);
+  }
+  #[inline]
+  pub fn add_connection_id(&mut self, connection_id: u64) {
+    self.fbb_.push_slot_always::<u64>(ClientHello::VT_CONNECTION_ID, connection_id);
   }
   #[inline]
   pub fn add_supported_formats(&mut self, supported_formats: flatbuffers::WIPOffset<flatbuffers::Vector<'b , u8>>) {
@@ -911,9 +975,13 @@ impl core::fmt::Debug for ClientHello<'_> {
     let mut ds = f.debug_struct("ClientHello");
       ds.field("version", &self.version());
       ds.field("client_random", &self.client_random());
+      ds.field("session_id", &self.session_id());
       ds.field("supported_ciphers", &self.supported_ciphers());
-      ds.field("kyber_public_key", &self.kyber_public_key());
       ds.field("x25519_public_key", &self.x25519_public_key());
+      ds.field("kyber_public_key", &self.kyber_public_key());
+      ds.field("nonce", &self.nonce());
+      ds.field("timestamp", &self.timestamp());
+      ds.field("connection_id", &self.connection_id());
       ds.field("supported_formats", &self.supported_formats());
       ds.finish()
   }
@@ -936,10 +1004,12 @@ impl<'a> flatbuffers::Follow<'a> for ServerHello<'a> {
 impl<'a> ServerHello<'a> {
   pub const VT_VERSION: flatbuffers::VOffsetT = 4;
   pub const VT_SERVER_RANDOM: flatbuffers::VOffsetT = 6;
-  pub const VT_SELECTED_CIPHER: flatbuffers::VOffsetT = 8;
-  pub const VT_KYBER_CIPHERTEXT: flatbuffers::VOffsetT = 10;
+  pub const VT_SESSION_ID: flatbuffers::VOffsetT = 8;
+  pub const VT_SELECTED_CIPHER: flatbuffers::VOffsetT = 10;
   pub const VT_X25519_PUBLIC_KEY: flatbuffers::VOffsetT = 12;
-  pub const VT_SELECTED_FORMAT: flatbuffers::VOffsetT = 14;
+  pub const VT_KYBER_CIPHERTEXT: flatbuffers::VOffsetT = 14;
+  pub const VT_CONNECTION_ID: flatbuffers::VOffsetT = 16;
+  pub const VT_SELECTED_FORMAT: flatbuffers::VOffsetT = 18;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -951,22 +1021,24 @@ impl<'a> ServerHello<'a> {
     args: &'args ServerHelloArgs<'args>
   ) -> flatbuffers::WIPOffset<ServerHello<'bldr>> {
     let mut builder = ServerHelloBuilder::new(_fbb);
-    if let Some(x) = args.x25519_public_key { builder.add_x25519_public_key(x); }
+    if let Some(x) = args.connection_id { builder.add_connection_id(x); }
+    builder.add_session_id(args.session_id);
     if let Some(x) = args.kyber_ciphertext { builder.add_kyber_ciphertext(x); }
+    if let Some(x) = args.x25519_public_key { builder.add_x25519_public_key(x); }
     if let Some(x) = args.server_random { builder.add_server_random(x); }
     builder.add_selected_cipher(args.selected_cipher);
-    builder.add_selected_format(args.selected_format);
     builder.add_version(args.version);
+    builder.add_selected_format(args.selected_format);
     builder.finish()
   }
 
 
   #[inline]
-  pub fn version(&self) -> u8 {
+  pub fn version(&self) -> u16 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<u8>(ServerHello::VT_VERSION, Some(0)).unwrap()}
+    unsafe { self._tab.get::<u16>(ServerHello::VT_VERSION, Some(0)).unwrap()}
   }
   #[inline]
   pub fn server_random(&self) -> Option<&'a Bytes32> {
@@ -976,11 +1048,25 @@ impl<'a> ServerHello<'a> {
     unsafe { self._tab.get::<Bytes32>(ServerHello::VT_SERVER_RANDOM, None)}
   }
   #[inline]
+  pub fn session_id(&self) -> u64 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u64>(ServerHello::VT_SESSION_ID, Some(0)).unwrap()}
+  }
+  #[inline]
   pub fn selected_cipher(&self) -> u16 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<u16>(ServerHello::VT_SELECTED_CIPHER, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn x25519_public_key(&self) -> Option<&'a Bytes32> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<Bytes32>(ServerHello::VT_X25519_PUBLIC_KEY, None)}
   }
   #[inline]
   pub fn kyber_ciphertext(&self) -> Option<flatbuffers::Vector<'a, u8>> {
@@ -990,11 +1076,11 @@ impl<'a> ServerHello<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, u8>>>(ServerHello::VT_KYBER_CIPHERTEXT, None)}
   }
   #[inline]
-  pub fn x25519_public_key(&self) -> Option<&'a Bytes32> {
+  pub fn connection_id(&self) -> Option<u64> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<Bytes32>(ServerHello::VT_X25519_PUBLIC_KEY, None)}
+    unsafe { self._tab.get::<u64>(ServerHello::VT_CONNECTION_ID, None)}
   }
   #[inline]
   pub fn selected_format(&self) -> u8 {
@@ -1012,22 +1098,26 @@ impl flatbuffers::Verifiable for ServerHello<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<u8>("version", Self::VT_VERSION, false)?
+     .visit_field::<u16>("version", Self::VT_VERSION, false)?
      .visit_field::<Bytes32>("server_random", Self::VT_SERVER_RANDOM, false)?
+     .visit_field::<u64>("session_id", Self::VT_SESSION_ID, false)?
      .visit_field::<u16>("selected_cipher", Self::VT_SELECTED_CIPHER, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, u8>>>("kyber_ciphertext", Self::VT_KYBER_CIPHERTEXT, false)?
      .visit_field::<Bytes32>("x25519_public_key", Self::VT_X25519_PUBLIC_KEY, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, u8>>>("kyber_ciphertext", Self::VT_KYBER_CIPHERTEXT, false)?
+     .visit_field::<u64>("connection_id", Self::VT_CONNECTION_ID, false)?
      .visit_field::<u8>("selected_format", Self::VT_SELECTED_FORMAT, false)?
      .finish();
     Ok(())
   }
 }
 pub struct ServerHelloArgs<'a> {
-    pub version: u8,
+    pub version: u16,
     pub server_random: Option<&'a Bytes32>,
+    pub session_id: u64,
     pub selected_cipher: u16,
-    pub kyber_ciphertext: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, u8>>>,
     pub x25519_public_key: Option<&'a Bytes32>,
+    pub kyber_ciphertext: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, u8>>>,
+    pub connection_id: Option<u64>,
     pub selected_format: u8,
 }
 impl<'a> Default for ServerHelloArgs<'a> {
@@ -1036,9 +1126,11 @@ impl<'a> Default for ServerHelloArgs<'a> {
     ServerHelloArgs {
       version: 0,
       server_random: None,
+      session_id: 0,
       selected_cipher: 0,
-      kyber_ciphertext: None,
       x25519_public_key: None,
+      kyber_ciphertext: None,
+      connection_id: None,
       selected_format: 0,
     }
   }
@@ -1050,24 +1142,32 @@ pub struct ServerHelloBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> ServerHelloBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_version(&mut self, version: u8) {
-    self.fbb_.push_slot::<u8>(ServerHello::VT_VERSION, version, 0);
+  pub fn add_version(&mut self, version: u16) {
+    self.fbb_.push_slot::<u16>(ServerHello::VT_VERSION, version, 0);
   }
   #[inline]
   pub fn add_server_random(&mut self, server_random: &Bytes32) {
     self.fbb_.push_slot_always::<&Bytes32>(ServerHello::VT_SERVER_RANDOM, server_random);
   }
   #[inline]
+  pub fn add_session_id(&mut self, session_id: u64) {
+    self.fbb_.push_slot::<u64>(ServerHello::VT_SESSION_ID, session_id, 0);
+  }
+  #[inline]
   pub fn add_selected_cipher(&mut self, selected_cipher: u16) {
     self.fbb_.push_slot::<u16>(ServerHello::VT_SELECTED_CIPHER, selected_cipher, 0);
+  }
+  #[inline]
+  pub fn add_x25519_public_key(&mut self, x25519_public_key: &Bytes32) {
+    self.fbb_.push_slot_always::<&Bytes32>(ServerHello::VT_X25519_PUBLIC_KEY, x25519_public_key);
   }
   #[inline]
   pub fn add_kyber_ciphertext(&mut self, kyber_ciphertext: flatbuffers::WIPOffset<flatbuffers::Vector<'b , u8>>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ServerHello::VT_KYBER_CIPHERTEXT, kyber_ciphertext);
   }
   #[inline]
-  pub fn add_x25519_public_key(&mut self, x25519_public_key: &Bytes32) {
-    self.fbb_.push_slot_always::<&Bytes32>(ServerHello::VT_X25519_PUBLIC_KEY, x25519_public_key);
+  pub fn add_connection_id(&mut self, connection_id: u64) {
+    self.fbb_.push_slot_always::<u64>(ServerHello::VT_CONNECTION_ID, connection_id);
   }
   #[inline]
   pub fn add_selected_format(&mut self, selected_format: u8) {
@@ -1093,9 +1193,11 @@ impl core::fmt::Debug for ServerHello<'_> {
     let mut ds = f.debug_struct("ServerHello");
       ds.field("version", &self.version());
       ds.field("server_random", &self.server_random());
+      ds.field("session_id", &self.session_id());
       ds.field("selected_cipher", &self.selected_cipher());
-      ds.field("kyber_ciphertext", &self.kyber_ciphertext());
       ds.field("x25519_public_key", &self.x25519_public_key());
+      ds.field("kyber_ciphertext", &self.kyber_ciphertext());
+      ds.field("connection_id", &self.connection_id());
       ds.field("selected_format", &self.selected_format());
       ds.finish()
   }

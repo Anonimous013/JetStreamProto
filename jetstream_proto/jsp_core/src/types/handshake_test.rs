@@ -16,6 +16,7 @@ mod tests {
             nonce: 999,
             timestamp: 1234567890,
             connection_id: ConnectionId::generate(),
+            supported_formats: vec![0, 1], // CBOR and FlatBuffers
         };
 
         let serialized = serde_cbor::to_vec(&hello).unwrap();
@@ -36,6 +37,7 @@ mod tests {
             public_key: [4u8; 32],
             kyber_ciphertext: vec![6u8; 768],
             connection_id: ConnectionId::generate(),
+            selected_format: 0, // CBOR selected
         };
 
         let serialized = serde_cbor::to_vec(&hello).unwrap();

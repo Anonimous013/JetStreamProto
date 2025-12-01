@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod tests {
     use crate::session::Session;
-    use crate::types::handshake::ClientHello;
     
     #[test]
     fn test_key_exchange() {

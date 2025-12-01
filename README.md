@@ -335,33 +335,146 @@ See [jsp_cli/README.md](jetstream_proto/jsp_cli/README.md) for full documentatio
 
 ## 🏗️ Architecture
 
+```mermaid
+graph TB
+    subgraph Application["🎯 Application Layer"]
+        APP[Application Code]
+    end
+    
+    subgraph SDKs["🌍 Multi-Language SDKs"]
+        RUST[Rust Native]
+        PYTHON[Python PyO3]
+        JS[TypeScript/JS WASM]
+        C[C cbindgen]
+        GO[Go cgo]
+        CPP[C++ cxx]
+        JAVA[Java JNI]
+    end
+    
+    subgraph Adaptive["🧠 Adaptive Protocol Engine"]
+        TRANS_SEL[Transport Selector]
+        CRYPTO_SEL[Crypto Selector]
+        COMP_SEL[Compression Selector]
+    end
+    
+    subgraph Transport["⚡ Transport Layer"]
+        CONN[Connection Manager]
+        CONG[BBRv2 Congestion Control]
+        REL[Reliability FEC + ARQ]
+    end
+    
+    subgraph Core["🔒 Core Layer"]
+        PQ[Post-Quantum Crypto<br/>Kyber768 + Dilithium3]
+        SER[Serialization<br/>FlatBuffers]
+        STORE[Storage & Sync<br/>CRDT]
+    end
+    
+    subgraph Network["🌐 Network Protocols"]
+        UDP[UDP]
+        TCP[TCP]
+        QUIC[QUIC]
+    end
+    
+    APP --> SDKs
+    SDKs --> Adaptive
+    
+    Adaptive --> TRANS_SEL
+    Adaptive --> CRYPTO_SEL
+    Adaptive --> COMP_SEL
+    
+    TRANS_SEL --> Transport
+    CRYPTO_SEL --> Core
+    COMP_SEL --> Core
+    
+    Transport --> CONN
+    Transport --> CONG
+    Transport --> REL
+    
+    Core --> PQ
+    Core --> SER
+    Core --> STORE
+    
+    CONN --> Network
+    Network --> UDP
+    Network --> TCP
+    Network --> QUIC
+    
+    style Application fill:#1e3a8a,stroke:#3b82f6,stroke-width:2px,color:#fff
+    style SDKs fill:#065f46,stroke:#10b981,stroke-width:2px,color:#fff
+    style Adaptive fill:#7c2d12,stroke:#f97316,stroke-width:2px,color:#fff
+    style Transport fill:#4c1d95,stroke:#a78bfa,stroke-width:2px,color:#fff
+    style Core fill:#831843,stroke:#ec4899,stroke-width:2px,color:#fff
+    style Network fill:#1e40af,stroke:#60a5fa,stroke-width:2px,color:#fff
+    
+    style TRANS_SEL fill:#ea580c,stroke:#fb923c,stroke-width:2px,color:#fff
+    style CRYPTO_SEL fill:#ea580c,stroke:#fb923c,stroke-width:2px,color:#fff
+    style COMP_SEL fill:#ea580c,stroke:#fb923c,stroke-width:2px,color:#fff
+    
+    style PQ fill:#be185d,stroke:#f472b6,stroke-width:2px,color:#fff
+    style SER fill:#be185d,stroke:#f472b6,stroke-width:2px,color:#fff
+    style STORE fill:#be185d,stroke:#f472b6,stroke-width:2px,color:#fff
 ```
-┌─────────────────────────────────────────────────────────┐
-│                   Application Layer                      │
-├─────────────────────────────────────────────────────────┤
-│  Multi-Language SDKs (Rust, Python, JS, C, Go, C++...)  │
-├─────────────────────────────────────────────────────────┤
-│                  Adaptive Protocol Engine                │
-│  ┌──────────────┬──────────────┬──────────────────────┐ │
-│  │  Transport   │    Crypto    │    Compression       │ │
-│  │  Selector    │   Selector   │    Selector          │ │
-│  │ UDP/TCP/QUIC │ ChaCha/AES   │  Brotli/LZ4/None     │ │
-│  └──────────────┴──────────────┴──────────────────────┘ │
-├─────────────────────────────────────────────────────────┤
-│                    Transport Layer                       │
-│  ┌──────────────┬──────────────┬──────────────────────┐ │
-│  │  Connection  │  Congestion  │   Reliability        │ │
-│  │  Management  │  Control     │   (FEC + ARQ)        │ │
-│  │              │   (BBRv2)    │                      │ │
-│  └──────────────┴──────────────┴──────────────────────┘ │
-├─────────────────────────────────────────────────────────┤
-│                      Core Layer                          │
-│  ┌──────────────┬──────────────┬──────────────────────┐ │
-│  │ Post-Quantum │ Serialization│   Storage & Sync     │ │
-│  │   Crypto     │  (FlatBuf)   │   (CRDT)             │ │
-│  │ Kyber/Dili   │              │                      │ │
-│  └──────────────┴──────────────┴──────────────────────┘ │
-└─────────────────────────────────────────────────────────┘
+
+### Component Interactions
+
+```mermaid
+sequenceDiagram
+    participant App as Application
+    participant SDK as SDK Layer
+    participant Adapt as Adaptive Engine
+    participant Trans as Transport
+    participant Net as Network
+    
+    App->>SDK: send_data(stream_id, data)
+    SDK->>Adapt: optimize(data, network_state)
+    
+    Adapt->>Adapt: Select Transport (UDP/TCP/QUIC)
+    Adapt->>Adapt: Select Crypto (ChaCha20/AES)
+    Adapt->>Adapt: Select Compression (Brotli/LZ4/None)
+    
+    Adapt->>Trans: send_optimized(packet)
+    Trans->>Trans: Apply FEC (Reed-Solomon)
+    Trans->>Trans: BBRv2 Pacing
+    
+    Trans->>Net: transmit(packet)
+    Net-->>Trans: ack
+    Trans-->>SDK: success
+    SDK-->>App: ok
+```
+
+### Data Flow
+
+```mermaid
+flowchart LR
+    A[Raw Data] --> B{Compression<br/>Selector}
+    B -->|Text| C[Brotli]
+    B -->|Binary| D[LZ4]
+    B -->|Small| E[None]
+    
+    C --> F[Serialization<br/>FlatBuffers]
+    D --> F
+    E --> F
+    
+    F --> G{Crypto<br/>Selector}
+    G -->|AES-NI| H[AES-256-GCM]
+    G -->|AVX2| I[ChaCha20-Poly1305]
+    G -->|Fallback| I
+    
+    H --> J[Encrypted Packet]
+    I --> J
+    
+    J --> K{Transport<br/>Selector}
+    K -->|Low Loss| L[UDP]
+    K -->|High Loss| M[TCP/QUIC]
+    K -->|Behind NAT| M
+    
+    L --> N[Network]
+    M --> N
+    
+    style B fill:#f97316,stroke:#fb923c,stroke-width:2px,color:#fff
+    style G fill:#f97316,stroke:#fb923c,stroke-width:2px,color:#fff
+    style K fill:#f97316,stroke:#fb923c,stroke-width:2px,color:#fff
+    style J fill:#ec4899,stroke:#f472b6,stroke-width:2px,color:#fff
 ```
 
 ---

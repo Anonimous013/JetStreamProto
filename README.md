@@ -547,8 +547,22 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
+<<<<<<< HEAD
 ## 🗺️ Roadmap
 
+=======
+## 📞 Support
+
+- **Documentation**: https://jetstream-proto.dev/docs
+- **Discord**: https://discord.gg/jetstream
+- **GitHub Issues**: https://github.com/yourusername/JetStreamProto/issues
+- **Email**: support@jetstream-proto.dev
+
+---
+
+## 🗺️ Roadmap
+
+>>>>>>> aafe121 (remove md files)
 ### v0.6.0 (Q1 2026)
 - [ ] WebRTC transport support
 - [ ] Android SDK (JNI - stable)

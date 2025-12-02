@@ -660,16 +660,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-<<<<<<< HEAD
-## 🗺️ Roadmap
-
 =======
 ## 📞 Support
 
 - **Documentation**: https://jetstream-proto.dev/docs
-- **Discord**: https://discord.gg/jetstream
-- **GitHub Issues**: https://github.com/yourusername/JetStreamProto/issues
-- **Email**: support@jetstream-proto.dev
+- **GitHub Issues**: https://github.com/Anonimous013/JetStreamProto/issues
+- **Email**: anonim.anonymouso001@gmail.com
 
 ---
 

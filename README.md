@@ -9,14 +9,14 @@
 
 <div align="center">
 
-# JetStreamProto v0.5.0
+# JetStreamProto v0.6.0
 
 **High-Performance Post-Quantum Networking Protocol**
 
 [![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![Version](https://img.shields.io/badge/version-0.5.0-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-0.6.0-blue.svg)]()
 [![Languages](https://img.shields.io/badge/SDKs-7%20languages-success.svg)]()
 
 [Features](#-features) • [Quick Start](#-quick-start) • [SDKs](#-multi-language-sdks) • [Performance](#-performance) • [Comparison](#-protocol-comparison) • [Documentation](#-documentation)

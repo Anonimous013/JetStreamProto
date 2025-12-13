@@ -3,7 +3,7 @@ members = [
     "jsp_core",
     "jsp_transport",
     "jetstream_examples",
-    "jsp_integration_tests", "jsp_benchmarks", "jsp_gateway", "jsp_wasm", "jsp_storage", "jsp_sync", "jsp_c", "jsp_python", "jsp_cli", "jsp_cpp", "jsp_java", "jsp_swift",
+    "jsp_integration_tests", "jsp_benchmarks", "jsp_gateway", "jsp_wasm", "jsp_storage", "jsp_sync", "jsp_c", "jsp_python", "jsp_cli", "jsp_java", "jsp_swift", "jsp_operator", "jsp_ios",
 ]
 resolver = "2"
 

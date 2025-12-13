@@ -1,7 +1,8 @@
 use anyhow::Result;
 use colored::Colorize;
 use serde::{Serialize, Deserialize};
-use std::time::Duration;
+
+
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Config {

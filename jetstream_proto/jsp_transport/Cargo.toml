@@ -21,10 +21,28 @@ rustls = { version = "0.23", features = ["ring"] }
 rcgen = "0.13"
 sha2 = "0.10"
 
+# Multi-hop dependencies
+async-trait = "0.1"
+serde_yaml = "0.9"
+thiserror = "1.0"
+if-addrs = "0.10"
+# Note: boringtun and shadowsocks-rust can be added later for full implementation
+# boringtun = "0.6"
+# shadowsocks-rust = "1.18"
+
+# Prometheus metrics
+prometheus = "0.13"
+once_cell = "1.19"
+hyper = { version = "0.14", features = ["full"] }
+
 
 [dev-dependencies]
 criterion = "0.4"
 
 [[bench]]
 name = "compression_bench"
+harness = false
+
+[[bench]]
+name = "multihop_bench"
 harness = false

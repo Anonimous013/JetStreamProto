@@ -1,0 +1,49 @@
+# Example Multi-Hop Configuration for JetStreamProto
+# This configuration creates a 4-hop anonymity chain
+
+enabled: true
+hop_timeout_secs: 10
+auto_failover: true
+health_check_interval_secs: 30
+
+chain:
+  # Hop 1: WireGuard Entry Node
+  - type: wireguard
+    endpoint: "vpn1.example.com:51820"
+    private_key: "YourBase64EncodedPrivateKey=="
+    peer_public_key: "PeerBase64EncodedPublicKey=="
+    allowed_ips:
+      - "0.0.0.0/0"
+      - "::/0"
+    persistent_keepalive: 25
+    listen_port: 0  # Auto-assign
+    
+  # Hop 2: Shadowsocks with TLS Obfuscation
+  - type: shadowsocks
+    endpoint: "proxy.example.com:8388"
+    password: "YourStrongPasswordHere"
+    method: "aes-256-gcm"  # or chacha20-ietf-poly1305
+    obfs: "tls"  # TLS obfuscation for DPI resistance
+    udp_relay: false
+    local_port: 0  # Auto-assign
+    
+  # Hop 3: XRay VLESS with TLS
+  - type: xray
+    endpoint: "cdn.example.com:443"
+    server_name: "cdn.example.com"
+    uuid: "your-uuid-v4-here"
+    tls: true
+    websocket: false  # Set to true for WebSocket transport
+    ws_path: "/"
+    local_port: 0  # Auto-assign
+    
+  # Hop 4: WireGuard Exit Node
+  - type: wireguard_exit
+    endpoint: "exit.example.com:51820"
+    private_key: "ExitNodePrivateKey=="
+    peer_public_key: "ExitNodePeerPublicKey=="
+    allowed_ips:
+      - "0.0.0.0/0"
+      - "::/0"
+    persistent_keepalive: 25
+    listen_port: 0  # Auto-assign

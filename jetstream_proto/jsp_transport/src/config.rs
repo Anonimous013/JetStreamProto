@@ -36,6 +36,8 @@ pub struct ConnectionConfig {
     pub stun_cache_ttl: Duration,
     /// Enable header compression (default: true)
     pub enable_header_compression: bool,
+    /// Multi-hop tunnel configuration (optional)
+    pub multihop_config: Option<crate::multihop::MultiHopConfig>,
 }
 
 impl Default for ConnectionConfig {
@@ -57,6 +59,7 @@ impl Default for ConnectionConfig {
             stun_timeout: Duration::from_secs(5),
             stun_cache_ttl: Duration::from_secs(300), // 5 minutes
             enable_header_compression: true,
+            multihop_config: None, // Multi-hop disabled by default
         }
     }
 }
@@ -86,6 +89,7 @@ pub struct ConnectionConfigBuilder {
     stun_timeout: Option<Duration>,
     stun_cache_ttl: Option<Duration>,
     enable_header_compression: Option<bool>,
+    multihop_config: Option<Option<crate::multihop::MultiHopConfig>>,
 }
 
 impl ConnectionConfigBuilder {
@@ -169,6 +173,11 @@ impl ConnectionConfigBuilder {
         self
     }
 
+    pub fn multihop_config(mut self, config: Option<crate::multihop::MultiHopConfig>) -> Self {
+        self.multihop_config = Some(config);
+        self
+    }
+
     pub fn build(self) -> ConnectionConfig {
         let default = ConnectionConfig::default();
         ConnectionConfig {
@@ -188,6 +197,7 @@ impl ConnectionConfigBuilder {
             stun_timeout: self.stun_timeout.unwrap_or(default.stun_timeout),
             stun_cache_ttl: self.stun_cache_ttl.unwrap_or(default.stun_cache_ttl),
             enable_header_compression: self.enable_header_compression.unwrap_or(default.enable_header_compression),
+            multihop_config: self.multihop_config.unwrap_or(default.multihop_config),
         }
     }
 }

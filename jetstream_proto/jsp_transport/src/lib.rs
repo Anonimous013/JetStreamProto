@@ -33,4 +33,23 @@ pub mod negotiation;
 pub mod transport_selector;
 pub mod adaptive;
 
+// Multi-hop tunnel manager
+pub mod multihop;
 
+// Prometheus metrics
+pub mod prometheus;
+
+// WebRTC transport
+pub mod webrtc;
+
+// OpenTelemetry tracing
+pub mod otel;
+
+// Load balancer
+pub mod load_balancer;
+
+// HTTP/3 compatibility
+pub mod http3;
+
+// Multi-path TCP
+pub mod mptcp;

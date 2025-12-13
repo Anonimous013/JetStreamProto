@@ -1,0 +1,16 @@
+[package]
+name = "jsp_ios"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["staticlib", "cdylib"]
+
+[dependencies]
+libc = "0.2"
+jsp_transport = { path = "../jsp_transport" }
+jsp_core = { path = "../jsp_core" }
+tokio = { version = "1.0", features = ["full"] }
+anyhow = "1.0"
+lazy_static = "1.4"
+bytes = "1.5"

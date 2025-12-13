@@ -669,24 +669,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 🗺️ Roadmap
-
->>>>>>> aafe121 (remove md files)
-### v0.6.0 (Q1 2026)
-- [ ] WebRTC transport support
-- [ ] Android SDK (JNI - stable)
-- [ ] iOS SDK (Swift - stable)
-- [ ] Kubernetes operator
-- [ ] Prometheus metrics exporter
-
-### v0.7.0 (Q2 2026)
-- [ ] HTTP/3 compatibility layer
-- [ ] Distributed tracing (OpenTelemetry)
-- [ ] Advanced load balancing
-- [ ] Multi-path TCP support
-
----
-
 <div align="center">
 
 **⭐ Star us on GitHub if you find JetStreamProto useful!**
